@@ -4,6 +4,6 @@ project:
 website:
   title: "pj"
   site-url: "https://kitled.github.io/pj"
-  description: "A new nbdev project: pj"
+  description: "ProJect management toolkit"
   repo-branch: main
   repo-url: "https://github.com/kitled/pj"
