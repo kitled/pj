@@ -3,4 +3,4 @@ website:
     contents:
       - index.ipynb
       - 00_core.ipynb
-      - 01_script.ipynb
+      - 01_cli.ipynb
