@@ -5,4 +5,4 @@ d = { 'settings': { 'branch': 'main',
                 'doc_host': 'https://kitled.github.io',
                 'git_url': 'https://github.com/kitled/pj',
                 'lib_path': 'pj'},
-  'syms': {'pj.core': {'pj.core.foo': ('core.html#foo', 'pj/core.py')}}}
+  'syms': {'pj.core': {'pj.core.foo': ('core.html#foo', 'pj/core.py')}, 'pj.script': {'pj.script.pj': ('script.html#pj', 'pj/script.py')}}}
