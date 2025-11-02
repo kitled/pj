@@ -3,6 +3,6 @@ requires = ["setuptools>=64.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name="pj"
+name="pj_sh"
 requires-python=">=3.9"
 dynamic = ["version", "description", "readme", "dependencies", "scripts"]
