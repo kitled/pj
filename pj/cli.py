@@ -18,7 +18,7 @@ import shutil
 # %% ../nbs/01_cli.ipynb 3
 hr = "_"
 
-# %% ../nbs/01_cli.ipynb 4
+# %% ../nbs/01_cli.ipynb 5
 def kill_processes(args):
     """Kill all running pj-related processes"""
     print("🛑 Stopping all background processes...")
@@ -42,7 +42,7 @@ def kill_processes(args):
     
     print("\n✅ All processes stopped!")
 
-# %% ../nbs/01_cli.ipynb 5
+# %% ../nbs/01_cli.ipynb 7
 def find_free_port(start=64000):
     """Find first available port starting from given port"""
     for port in range(start, start + 100):
@@ -51,7 +51,7 @@ def find_free_port(start=64000):
                 return port
     return start
 
-# %% ../nbs/01_cli.ipynb 6
+# %% ../nbs/01_cli.ipynb 9
 def setup_dark_theme(project_path, log_file=None, verbose=False):
     """Set up dark mode theme for nbdev docs"""
     nbs_path = project_path / "nbs"
@@ -188,7 +188,7 @@ blockquote {
             f.write(hr*60 + "\n")
 
 
-# %% ../nbs/01_cli.ipynb 7
+# %% ../nbs/01_cli.ipynb 11
 def check_cmd(cmd, install_hint):
     """Check if a command exists in PATH"""
     if not shutil.which(cmd):
@@ -197,7 +197,7 @@ def check_cmd(cmd, install_hint):
         return False
     return True
 
-# %% ../nbs/01_cli.ipynb 8
+# %% ../nbs/01_cli.ipynb 13
 def run_cmd(cmd, cwd=None, check=True, capture_output=False, log_file=None, verbose=False):
     """Run a shell command with optional logging and pretty output"""
     
@@ -263,7 +263,7 @@ def run_cmd(cmd, cwd=None, check=True, capture_output=False, log_file=None, verb
             )
         return result
 
-# %% ../nbs/01_cli.ipynb 9
+# %% ../nbs/01_cli.ipynb 15
 def get_git_config(key):
     """Get git config value"""
     try:
@@ -277,10 +277,9 @@ def get_git_config(key):
     except:
         return None
 
-# %% ../nbs/01_cli.ipynb 10
+# %% ../nbs/01_cli.ipynb 17
 def check_prereqs():
     """
-    Phase 1: Checks
     Validate all prerequisites and gather system info.
     Returns dict with user info or exits on failure.
     """
@@ -340,12 +339,9 @@ def check_prereqs():
         'gh_username': gh_username
     }
 
-# %% ../nbs/01_cli.ipynb 11
+# %% ../nbs/01_cli.ipynb 20
 def init_nbdev(args):
-    """
-    Phase 2: Setup
-    Initialize a new nbdev project with full configuration.
-    """
+    """Initialize a new nbdev project with full configuration."""
     project_name = args.name
     
     # Phase 1: Checks
@@ -545,12 +541,9 @@ def init_nbdev(args):
     os.chdir(project_path)
     os.execvp(os.environ.get("SHELL", "bash"), [os.environ.get("SHELL", "bash")])
 
-# %% ../nbs/01_cli.ipynb 12
+# %% ../nbs/01_cli.ipynb 22
 def sync(args):
-    """
-    Phase 3: Sync
-    Sync project: pull, prepare (export/test/clean), commit, and push
-    """
+    """Sync project: pull, prepare (export/test/clean), commit, and push"""
     print(hr * 60)
     print("PHASE 3: SYNC")
     
@@ -594,17 +587,18 @@ def sync(args):
     if not status_result.stdout.strip():
         print("   No changes to commit")
     else:
-        run_cmd(["git", "commit", "-am", commit_message], verbose=args.verbose)
+        run_cmd(["git", "add", "-A"], verbose=args.verbose)
+        run_cmd(["git", "commit", "-m", commit_message], verbose=args.verbose)
     
     # 4. Git push
-    print("\n📤 4. Pushing to GitHub")
+    print("📤 4. Pushing to GitHub")
     run_cmd(["git", "push"], verbose=args.verbose)
     
     print()
     print(hr * 60)
     print("✅ Sync complete!")
 
-# %% ../nbs/01_cli.ipynb 13
+# %% ../nbs/01_cli.ipynb 24
 def main():
     """Main CLI entry point"""
     parser = argparse.ArgumentParser(
