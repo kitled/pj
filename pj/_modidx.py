@@ -15,5 +15,4 @@ d = { 'settings': { 'branch': 'main',
                         'pj.cli.run_cmd': ('cli.html#run_cmd', 'pj/cli.py'),
                         'pj.cli.setup_dark_theme': ('cli.html#setup_dark_theme', 'pj/cli.py'),
                         'pj.cli.sync': ('cli.html#sync', 'pj/cli.py')},
-            'pj.core': {'pj.core.foo': ('core.html#foo', 'pj/core.py')},
-            'pj.script': {'pj.script.pj': ('script.html#pj', 'pj/script.py')}}}
+            'pj.core': {'pj.core.foo': ('core.html#foo', 'pj/core.py')}}}
