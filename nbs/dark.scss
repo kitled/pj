@@ -1,0 +1,49 @@
+/*-- scss:defaults --*/
+
+// Base document colors for dark mode
+$body-bg: #181818;
+$body-color: #ccc;
+$link-color: #75AADB;
+
+// Code blocks
+$code-block-bg-alpha: -.9;
+
+// Navbar
+$navbar-bg: #2a2a2a;
+
+/*-- scss:rules --*/
+
+// Fix cell output text visibility in dark mode
+.cell-output,
+.cell-output-display {
+  color: #ccc;
+}
+
+.cell-output pre {
+  color: #ccc;
+  background-color: #1e1e1e;
+}
+
+// Ensure code output is visible
+.cell-output > pre code,
+.cell-output-stdout pre {
+  color: #ccc;
+}
+
+// Fix inline code in dark mode
+code:not(pre > code) {
+  background-color: #2a2a2a !important;
+  color: #ab8dff;
+}
+
+// Fix blockquote code blocks in dark mode
+blockquote pre,
+blockquote pre code {
+  color: #ccc;
+  background-color: #1e1e1e;
+}
+
+blockquote {
+  border-left-color: #555;
+  color: #bbb;
+}
