@@ -512,8 +512,7 @@ def init_nbdev(args):
         port = find_free_port(64000)
         print(f"\n📓 Launching Jupyter Lab on port {port}")
         subprocess.Popen(
-            ["jupyter", "lab", f"--port={port}", "--NotebookApp.token=''", "--NotebookApp.password=''"],
-            # ["jupyter", "lab", f"--port={port}", "--no-browser", "--NotebookApp.token=''", "--NotebookApp.password=''"],
+            ["jupyter-lab", f"--port={port}", "--NotebookApp.token=''", "--NotebookApp.password=''"],
             cwd=project_path,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
@@ -548,7 +547,7 @@ def sync(args):
     print("PHASE 3: SYNC")
     
     # 1. Git pull
-    print("⬇️  1. Pulling latest changes")
+    print("⬇️ 1. Pulling latest changes")
     result = run_cmd(["git", "pull"], check=False, verbose=args.verbose)
     
     if result.returncode != 0:
