@@ -8,7 +8,7 @@ __all__ = ['main']
 # %% ../nbs/05_cli.ipynb 3
 import argparse
 import sys
-from .core import kill_processes
+from .core import kill_processes, get_pj_version
 from .checks import check_prereqs
 from .setup import init_nbdev
 from .sync import sync
@@ -18,7 +18,10 @@ from .ship import ship
 def main():
     """Main CLI entry point"""
     parser = argparse.ArgumentParser(
-        description="pj: the ProJect management toolkit",
+        description=f"""pj > the ProJect shell (v{get_pj_version()})
+   | Automate notebook project workflows: init, sync, and ship software.
+   | https://kitled.github.io/pj
+    """,
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -29,9 +32,14 @@ Examples:
   pj sync -m "Added new feature"
   pj ship
   pj ship --dry-run
-
-For more info, visit: https://nbdev.fast.ai
+  pj kill
         """
+    )
+
+    parser.add_argument(
+        '--version', '-V',
+        action='version',
+        version=f'pj {get_pj_version()}'
     )
     
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
