@@ -5,9 +5,13 @@
 
 [![PyPI](https://img.shields.io/pypi/v/pj-sh.svg)](https://pypi.org/project/pj-sh/)
 [![PyPI -
-Downloads](https://img.shields.io/pypi/dm/pj-sh.svg)](https://pypi.org/project/pj-sh/0.0.1/)
+Downloads](https://img.shields.io/pypi/dm/pj-sh.svg)](https://pypi.org/project/pj-sh/)
 
-## Installation
+Three commands: `pj init` creates the entire nbdev project
+infrastructure and pushes to GitHub, `pj sync` runs nbdev_prepare then
+commits and pushes, `pj kill` stops background processes. That’s it.
+
+## Install
 
 Install from [PyPI](https://pypi.org/project/pj/):
 
@@ -21,13 +25,20 @@ or latest from the GitHub [repository](https://github.com/kitled/pj):
 $ uv tool install git+https://github.com/kitled/pj.git
 ```
 
-## How to use `pj`
+## Usage
 
 ``` sh
 pj init my-project  # start
 pj sync             # work
 pj kill             # end
 ```
+
+Create complete nbdev project with `pj init`: GitHub repository, virtual
+environment, registered Jupyter kernel, direnv activation, dark theme
+toggle, initial commit pushed.
+
+Subsequent `pj sync` runs the full export-test-clean-add-commit-push
+workflow in one invocation.
 
 Find all options with `--help` after any command.
 
@@ -51,7 +62,10 @@ pj init my-project -v \
  --license apache2
 ```
 
-### [`sync`](https://kitled.github.io/pj/cli.html#sync)
+Everything is logged to `init.log` by default; use `-v` flag to see
+stdin/out.
+
+### `sync`
 
 > Automated `nbdev_prepare`, `git commit` and `push`.
 
@@ -98,7 +112,7 @@ started.
 
 ``` sh
 # make sure pj package is installed in development mode
-pip install -e .
+uv pip install -e .
 
 # make changes under nbs/ directory
 # ...
@@ -107,9 +121,7 @@ pip install -e .
 nbdev_prepare
 ```
 
-## Usage
-
-### Documentation
+## Documentation
 
 Documentation can be found hosted on this GitHub
 [repository](https://github.com/kitled/pj)’s

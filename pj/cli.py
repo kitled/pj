@@ -511,8 +511,9 @@ def init_nbdev(args):
     if not args.no_lab:
         port = find_free_port(64000)
         print(f"\n📓 Launching Jupyter Lab on port {port}")
+        venv_jupyter = project_path / ".venv" / "bin" / "jupyter"
         subprocess.Popen(
-            ["jupyter-lab", f"--port={port}", "--NotebookApp.token=''", "--NotebookApp.password=''"],
+            [str(venv_jupyter), "lab", f"--port={port}", "--NotebookApp.token=''", "--NotebookApp.password=''"],
             cwd=project_path,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
