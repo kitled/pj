@@ -6,13 +6,18 @@
 [![PyPI](https://img.shields.io/pypi/v/pj-sh.svg)](https://pypi.org/project/pj-sh/)
 <!-- [![PyPI - Downloads](https://img.shields.io/pypi/dm/pj-sh.svg)](https://pypi.org/project/pj-sh/) -->
 
-Three commands: `pj init` creates the entire nbdev project
-infrastructure and pushes to GitHub, `pj sync` runs nbdev_prepare then
-commits and pushes, `pj kill` stops background processes. That’s it.
+`pj`, the **p**ro**j**ect shell, has four commands:  
+`pj init` creates the entire nbdev project infrastructure and pushes to
+GitHub,  
+`pj sync` runs nbdev_prepare then commits and pushes,  
+`pj ship` bumps up GitHub version and releases to PyPI.org, `pj kill`
+stops background processes.  
+That’s it.
 
 ## Install
 
-Install from [PyPI](https://pypi.org/project/pj/):
+Install from [PyPI](https://pypi.org/project/pj/), ideally with
+[`uv`](https://docs.astral.sh/uv/):
 
 ``` sh
 $ uv tool install pj-sh
@@ -64,7 +69,7 @@ pj init my-project -v \
 Everything is logged to `init.log` by default; use `-v` flag to see
 stdin/out.
 
-### `sync`
+### [`sync`](https://kitled.github.io/pj/sync.html#sync)
 
 > Automated `nbdev_prepare`, `git commit` and `push`.
 
@@ -89,13 +94,11 @@ the host.
 Create a fully-configured GitHub + nbdev project with one command.  
 No manual setup, no forgotten steps. From zero to ready-to-code.
 
-### The Three Phases
-
 1.  Checks - Validate prerequisites
 2.  Setup - Create repo, nbdev structure, venv, kernel, direnv
 3.  Sync - Prepare nbdev, commit, push
 
-### Design Principles
+### Features
 
 - Clean output: One line per operation
 - Verbose mode: Show commands and boxed output with `-v`
@@ -124,6 +127,8 @@ nbdev_prepare
 
 Documentation can be found hosted on this GitHub
 [repository](https://github.com/kitled/pj)’s
-[pages](https://kitled.github.io/pj/). Additionally you can find package
-manager specific guidelines on [conda](https://anaconda.org/kitled/pj)
-and [pypi](https://pypi.org/project/pj/) respectively.
+[pages](https://kitled.github.io/pj/).  
+Additionally you can find package manager specific guidelines on
+[pypi](https://pypi.org/project/pj/).
+
+See also [`uv`](https://docs.astral.sh/uv/) docs if needed.

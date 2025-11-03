@@ -4,6 +4,6 @@ project:
 website:
   title: "pj_sh"
   site-url: "https://kitled.github.io/pj"
-  description: "ProJect management toolkit"
+  description: "project shell > hyperspace velocity"
   repo-branch: main
   repo-url: "https://github.com/kitled/pj"
