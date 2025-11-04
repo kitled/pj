@@ -28,8 +28,8 @@ def main():
         epilog="""
 Examples:
   pj init my-project
-  pj init my-project -v --desc "My awesome ML library" --private
-  pj init my-project --python 3.11 --author "John Doe"
+  pj init my-project -v --desc "Awesome domain library" --private
+  pj init my-project --python 3.11 --author "Upbeat Photon"
   pj sync
   pj sync -m "Added new feature"
   pj ship
@@ -186,7 +186,8 @@ Examples:
     # ship subcommand
     ship_parser = subparsers.add_parser(
         "ship",
-        help="Ship a new release: bump version, build, upload, tag, and release",
+        help="""Ship a new release: bump version, build, upload,
+tag, and release""",
         description="""
 Ship a complete release in one command:
 1. Check for uncommitted changes
