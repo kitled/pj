@@ -19,9 +19,11 @@ def main():
     """Main CLI entry point"""
     parser = argparse.ArgumentParser(
         description=f"""pj > the ProJect shell (v{get_pj_version()})
-   | Automate notebook project workflows: init, sync, and ship software.
-   | https://kitled.github.io/pj
-    """,
+   ┌───────────────────────────
+   │ Automate notebook project workflows: init, sync, and ship software.
+   │ 🧬 https://kitled.github.io/pj        📜 Apache 2.0
+   │ 📦 https://pypi.org/project/pj-sh     👨‍💻 Kit, 2025.
+   └─""",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

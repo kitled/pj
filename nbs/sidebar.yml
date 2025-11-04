@@ -4,4 +4,7 @@ website:
       - index.ipynb
       - 00_core.ipynb
       - 01_checks.ipynb
-      - 02_init.ipynb
+      - 02_setup.ipynb
+      - 03_sync.ipynb
+      - 04_ship.ipynb
+      - 05_cli.ipynb
