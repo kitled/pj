@@ -159,6 +159,7 @@ Examples:
     sync_parser = subparsers.add_parser(
         "sync",
         help="Sync project: pull, prepare, and push to GitHub",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
 Sync your nbdev project in one command:
 1. git pull (aborts on merge conflicts)
@@ -186,8 +187,8 @@ Examples:
     # ship subcommand
     ship_parser = subparsers.add_parser(
         "ship",
-        help="""Ship a new release: bump version, build, upload,
-tag, and release""",
+        help="""Ship a new release: bump version, build, upload, tag, and release""",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
         description="""
 Ship a complete release in one command:
 1. Check for uncommitted changes
