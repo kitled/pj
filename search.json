@@ -1,0 +1,292 @@
+[
+  {
+    "objectID": "checks.html",
+    "href": "checks.html",
+    "title": "checks",
+    "section": "",
+    "text": "Before creating repositories, configuring environments, or running builds, we validate that all required tools exist and are properly configured. This fail-fast approach prevents partial initialization states that leave projects in limbo.\nThe checks fall into three categories: command availability (is the tool installed?), authentication state (can we talk to GitHub?), and user metadata (who is creating this project?).",
+    "crumbs": [
+      "checks"
+    ]
+  },
+  {
+    "objectID": "checks.html#prerequisite-validation",
+    "href": "checks.html#prerequisite-validation",
+    "title": "checks",
+    "section": "Prerequisite Validation",
+    "text": "Prerequisite Validation\nThe validation orchestrator: check every required tool, verify GitHub authentication, and gather user information for project metadata. Returns a dictionary of user info if all checks pass; exits immediately if anything fails.\n\nsource\n\ncheck_prereqs\n\n check_prereqs ()\n\nValidate all prerequisites and gather system info. Returns dict with user info or exits on failure.\n\n\nDesign Decisions\nWhy check commands individually? We want to report all missing tools at once, not fail on the first missing one. The user sees the complete list of what needs installing, rather than playing whack-a-mole across multiple runs.\nWhy validate nbdev_new specifically? There’s no nbdev command—it’s a collection of subcommands like nbdev_new, nbdev_export, nbdev_prepare. Checking for a non-existent parent command would pass even when nbdev isn’t installed.\nWhy separate GitHub auth check? Authentication is stateful and can expire. We verify it explicitly with gh auth status rather than letting a later gh repo create fail cryptically.\nWhy gather user info here? Git and GitHub metadata (author name, email, username) are needed for project scaffolding. Collecting them during checks means we fail early if git isn’t configured, and we have the data ready when needed later.\nDefault values for missing config: If user.name or user.email aren’t set, we provide placeholder strings. nbdev_new will use these values, and the user can fix them later in settings.ini. Better than blocking on missing config.\nThe function returns a dictionary rather than printing values because the caller (init_nbdev) needs to pass this data to subsequent setup steps. Returning structured data keeps concerns separated: checks validate, initialization consumes.",
+    "crumbs": [
+      "checks"
+    ]
+  },
+  {
+    "objectID": "cli.html",
+    "href": "cli.html",
+    "title": "CLI",
+    "section": "",
+    "text": "The CLI module is pure glue code: parse arguments, validate flags, and dispatch to the appropriate function. No business logic lives here—just the translation layer between command-line invocations and the underlying modules.\nThis separation keeps the CLI thin and the core functions testable. You can call init_nbdev(), sync(), or ship() directly from Python without going through argparse, useful for testing and for potential future GUIs or APIs.",
+    "crumbs": [
+      "CLI"
+    ]
+  },
+  {
+    "objectID": "cli.html#argument-parsing",
+    "href": "cli.html#argument-parsing",
+    "title": "CLI",
+    "section": "Argument Parsing",
+    "text": "Argument Parsing\nThe main entry point constructs the argument parser hierarchy: a root parser with subcommands, each subcommand with its own arguments and flags.\n\nsource\n\nmain\n\n main ()\n\nMain CLI entry point\n\n\nCLI Architecture\nSubcommand dispatch\nArgparse’s subparsers creates a command hierarchy: pj &lt;command&gt; [options]. Each subcommand gets its own parser with specific arguments. The dest=\"command\" attribute stores which subcommand was invoked, making dispatch trivial: check args.command and call the appropriate function.\nArgument groups\nThe init subcommand has many flags. Organizing them into logical groups (output_group, gh_group, py_group, etc.) structures the help text. Users see related options clustered together rather than one long alphabetized list.\nRaw description formatting\nRawDescriptionHelpFormatter preserves whitespace and newlines in description and epilog strings. This lets us write multi-line examples and numbered workflows that display exactly as written, rather than getting reflowed into paragraphs.\nDefault values\nMany arguments have defaults specified in the business logic functions, not here. The CLI passes None for optional arguments, and the called function provides the default. This keeps defaults in one place—changing the default license doesn’t require updating both CLI and init logic.\nThe dispatch pattern\nThe final if/elif chain is the entire dispatch logic. Parse args, check which command, call the function, pass the args object. No validation, no transformation—the called functions handle everything. This keeps the CLI dumb and the modules smart.\nNo command behavior\nIf the user runs pj with no subcommand, we print the help and exit with code 1. This is more helpful than an error message—the user sees all available commands immediately.\n\n\nFuture: Additional Commands\nTODO: pj dev command\nLaunch development servers (Jupyter Lab, nbdev_preview) using the project’s venv jupyter. Should replace the post-init server launching currently inline in init_nbdev().\nTODO: pj kernel command\nManage Jupyter kernels: list installed kernels, uninstall by name, re-register after moving projects. Common operations that currently require remembering jupyter kernelspec syntax.\nTODO: pj check command\nRun just the prerequisite checks without initializing a project. Useful for verifying your system is ready before starting a batch of projects.\nThese extensions are natural once the core workflow is solid. The modular structure makes adding new commands straightforward: create the function in an appropriate module, add the subparser here, dispatch to the function.",
+    "crumbs": [
+      "CLI"
+    ]
+  },
+  {
+    "objectID": "cli.html#examples",
+    "href": "cli.html#examples",
+    "title": "CLI",
+    "section": "Examples",
+    "text": "Examples\n\n!cd .. && pwd && nbdev_export\n\n/app/data/dev/pj\n\n\n\n!/app/data/.local/bin/pj -h\n\nusage: pj [-h] [--version] {init,sync,ship,kill} ...\n\npj &gt; the ProJect shell (v0.0.5)\n   ┌───────────────────────────\n   │ Automate notebook project workflows: init, sync, and ship software.\n   │ 🧬 https://kitled.github.io/pj        📜 Apache 2.0\n   │ 📦 https://pypi.org/project/pj-sh     👨‍💻 Kit, 2025.\n   └─\n\npositional arguments:\n  {init,sync,ship,kill}\n                        Available commands\n    init                Initialize a new nbdev project\n    sync                Sync project: pull, prepare, and push to GitHub\n    ship                Ship a new release: bump version, build, upload, tag,\n                        and release\n    kill                Kill all running background processes (jupyter,\n                        nbdev_preview, quarto)\n\noptions:\n  -h, --help            show this help message and exit\n  --version, -V         show program's version number and exit\n\nExamples:\n  pj init my-project\n  pj init my-project -v --desc \"Awesome domain library\" --private\n  pj init my-project --python 3.11 --author \"Upbeat Photon\"\n  pj sync\n  pj sync -m \"Added new feature\"\n  pj ship\n  pj ship --dry-run\n  pj kill\n        \n\n\n\n!/app/data/.local/bin/pj ship -h\n\nusage: pj ship [-h] [--part {0,1,2}] [--dry-run] [--force] [--skip-pypi]\n               [--skip-gh-release] [-v]\n\nShip a complete release in one command:\n1. Check for uncommitted changes\n2. Bump version with nbdev_bump_version\n3. Commit and push version bump\n4. Build and upload to PyPI with nbdev_pypi\n5. Create git tag and push\n6. Create GitHub release with auto-generated notes\n        \n\noptions:\n  -h, --help         show this help message and exit\n  --part {0,1,2}     Version part to bump: 0=major, 1=minor, 2=patch (default:\n                     2)\n  --dry-run          Show what would be done without making changes\n  --force            Ship even with uncommitted changes (not recommended)\n  --skip-pypi        Skip PyPI upload (for testing)\n  --skip-gh-release  Skip GitHub release creation\n  -v, --verbose      Show detailed command output\n\nExamples:\n  pj ship                    # Bump patch version (0.0.X)\n  pj ship --part 1           # Bump minor version (0.X.0)\n  pj ship --part 0           # Bump major version (X.0.0)\n  pj ship --dry-run          # Preview without making changes\n  pj ship --skip-pypi        # Skip PyPI upload (for testing)\n        \n\n\n\n!/app/data/.local/bin/pj init -h\n\nusage: pj init [-h] [-v] [--logfile LOGFILE] [--no-log] [--org ORG] [--public]\n               [--description DESCRIPTION] [--python PYTHON] [--author AUTHOR]\n               [--author-email AUTHOR_EMAIL]\n               [--license {apache2,mit,gpl3,bsd3}] [--min-python MIN_PYTHON]\n               [--no-preview] [--no-lab] [-c] [-q]\n               name\n\nInitialize a new nbdev project with all the bells and whistles:\n- GitHub repository creation\n- nbdev project structure with Jupyter hooks\n- Virtual environment with uv\n- Jupyter kernel registration\n- direnv auto-activation\n        \n\npositional arguments:\n  name                  Project name (will be repo and package name)\n\noptions:\n  -h, --help            show this help message and exit\n\noutput options:\n  -v, --verbose         Show detailed command output\n  --logfile LOGFILE     Path to log file (default: PROJECT/init.log)\n  --no-log              Disable logging to file\n\nGitHub options:\n  --org ORG             Create repository under this organization (default:\n                        personal account)\n  --public              Create public repository (default: private)\n  --description DESCRIPTION, --desc DESCRIPTION\n                        Repository description\n\nPython options:\n  --python PYTHON       Python version (e.g., 3.11, 3.12)\n\nnbdev options:\n  --author AUTHOR       Author name (default: from git config)\n  --author-email AUTHOR_EMAIL\n                        Author email (default: from git config)\n  --license {apache2,mit,gpl3,bsd3}\n                        License type (default: apache2)\n  --min-python MIN_PYTHON\n                        Minimum Python version (default: 3.9)\n\npost-init options:\n  --no-preview          Skip opening nbdev_preview\n  --no-lab              Skip launching Jupyter Lab\n  -c, --code            Open VSCode\n  -q, --quiet           Quiet mode: skip preview and lab (just cd + tree)\n\nExamples:\n  pj init my-project\n  pj init my-project -v --desc \"ML utilities\" --private\n  pj init my-project --python 3.11 --license mit\n        \n\n\n\n!/app/data/.local/bin/pj sync -h\n\nusage: pj sync [-h] [--message MESSAGE] [-v]\n\nSync your nbdev project in one command:\n1. git pull (aborts on merge conflicts)\n2. nbdev_prepare (export, test, clean - aborts if tests fail)\n3. git commit -am \"message\"\n4. git push\n        \n\noptions:\n  -h, --help            show this help message and exit\n  --message MESSAGE, -m MESSAGE\n                        Commit message (default: 'save')\n  -v, --verbose         Show detailed command output\n\nExamples:\n  pj sync                    # Uses default message \"save\"\n  pj sync -m \"Added tests\"   # Custom commit message\n  pj sync -v                 # Verbose output",
+    "crumbs": [
+      "CLI"
+    ]
+  },
+  {
+    "objectID": "ship.html",
+    "href": "ship.html",
+    "title": "ship",
+    "section": "",
+    "text": "Releasing software involves a precise sequence: increment version, sync that change, build distribution artifacts, upload to PyPI, tag the release in git, and create a GitHub release with notes. Miss any step and you have version mismatches, untagged releases, or PyPI packages that don’t match the git history.\npj ship automates the entire pipeline with safety gates: abort if there are uncommitted changes, verify each step succeeds before proceeding, support dry-run mode to preview without executing. The result: reliable releases that take 30 seconds instead of 15 minutes of careful manual steps.",
+    "crumbs": [
+      "ship"
+    ]
+  },
+  {
+    "objectID": "ship.html#version-extraction",
+    "href": "ship.html#version-extraction",
+    "title": "ship",
+    "section": "Version Extraction",
+    "text": "Version Extraction\nParse the current version from settings.ini for display and tag creation. This is the source of truth for version numbers in nbdev projects.\n\nsource\n\nget_version_from_settings\n\n get_version_from_settings ()\n\nExtract version from settings.ini\nThe version line in settings.ini looks like version = 0.0.3. We split on =, take the right side, and strip whitespace. Simple parsing, but robust enough—nbdev enforces this format.",
+    "crumbs": [
+      "ship"
+    ]
+  },
+  {
+    "objectID": "ship.html#release-orchestration",
+    "href": "ship.html#release-orchestration",
+    "title": "ship",
+    "section": "Release Orchestration",
+    "text": "Release Orchestration\nThe complete release pipeline with safety checks, dry-run support, and granular control flags.\n\nsource\n\nship\n\n ship (args)\n\nShip a new release: bump version, sync, build, upload, tag, and create GitHub release\n\n\nThe Release Pipeline\nGate 0: Clean working directory\nShipping with uncommitted changes is dangerous—you might release code that doesn’t match what’s in git. We check git status --porcelain and abort if there are any uncommitted files. The --force flag bypasses this for testing, but it’s discouraged.\nStep 1: Version bump\nnbdev_bump_version increments the specified part of the version number (0=major, 1=minor, 2=patch) and updates settings.ini. The --part argument defaults to 2 (patch releases: 0.0.X), but you can bump minor (0.X.0) or major (X.0.0) as needed.\nIn dry-run mode, we manually calculate what the new version would be by splitting on ., incrementing the specified part, and rejoining. This gives accurate preview without modifying settings.ini.\nStep 2: Sync version bump\nThe version change in settings.ini needs to be committed and pushed before we build. Otherwise, the PyPI package would have a different version than what’s in git—a recipe for confusion.\nTODO: This is the second place we need git_sync(). Same three-line pattern as in sync(): add, commit, push. Once we extract the helper, both call sites become git_sync(message, verbose).\nStep 3: Build and upload\nnbdev_pypi handles the full build process: creates isolated environment, installs build dependencies, builds sdist and wheel, uploads both to PyPI. Those setuptools warnings about _MissingDynamic are harmless—nbdev’s dual settings.ini/pyproject.toml approach confuses setuptools slightly, but the build works.\nThe --skip-pypi flag is useful for testing the full workflow without actually uploading. You can verify tagging and GitHub release creation without touching PyPI.\nStep 4: Git tagging\nTags mark specific commits as releases. We use annotated tags (-a) with a message, following the convention vX.Y.Z. The tag must be created after the version bump commit exists and after PyPI upload succeeds—if upload fails, we haven’t polluted git with a tag for a non-existent release.\nStep 5: GitHub release\ngh release create with --generate-notes auto-generates release notes from commits since the last tag. This gives you a basic changelog without maintaining a separate CHANGELOG.md file. For projects without GitHub issues tracking, this is good enough.\nThe --skip-gh-release flag lets you publish to PyPI and tag without creating the GitHub release, useful if you want to write custom release notes manually later.\nPost-release links\nAfter a successful release, we show direct links to the PyPI package page and GitHub release. The repo URL comes from gh repo view, which reads the remote from .git/config—works whether the repo is in a personal account or an organization.\nThe upgrade reminder\nAfter shipping a new version, your global pj installation is now outdated. We remind you to run uv tool upgrade pj-sh to get the version you just released. Otherwise, you’ll be dogfooding an old version while the new one is live.\n\n\nDesign Decisions\nWhy bump version first? The version in settings.ini feeds into the build process. Bump, commit, push, then build ensures the package metadata reflects what’s in git.\nWhy tag after PyPI upload? If the upload fails (auth issues, rate limits, package name conflicts), you haven’t created a tag that points to a version that doesn’t exist on PyPI. The tag should represent “this commit is available as version X on PyPI”.\nWhy separate skip flags? Sometimes you want to test tagging without uploading (--skip-pypi). Sometimes you want to upload but write release notes manually later (--skip-gh-release). Granular control beats all-or-nothing.\nWhy dry-run mode? The first time you run pj ship, you want to see exactly what will happen without actually doing it. Dry-run shows the command sequence, calculates the new version, and exits without modifying anything. Build confidence before pulling the trigger.\nWhy –force? Testing the release pipeline often involves uncommitted work-in-progress code. --force bypasses the clean working directory check so you can test the full workflow without stashing. Use sparingly—never force a real release.",
+    "crumbs": [
+      "ship"
+    ]
+  },
+  {
+    "objectID": "sync.html",
+    "href": "sync.html",
+    "title": "sync",
+    "section": "",
+    "text": "Sync compresses the repetitive development cycle into a single command: pull latest changes, run nbdev’s prepare pipeline (export notebooks to modules, run tests, clean metadata), commit everything, and push. This workflow runs dozens of times during active development—automation prevents skipped steps and inconsistent state.\nThe sequence is strictly ordered and fails fast. A merge conflict aborts immediately. Test failures block the commit. Each gate ensures the next step operates on valid state.",
+    "crumbs": [
+      "sync"
+    ]
+  },
+  {
+    "objectID": "sync.html#future-extract-git-sync-helper",
+    "href": "sync.html#future-extract-git-sync-helper",
+    "title": "sync",
+    "section": "Future: Extract Git Sync Helper",
+    "text": "Future: Extract Git Sync Helper\nTODO: Create git_sync() helper for DRY\nBoth sync() and ship() (in 04_ship.ipynb) perform similar git operations: - Add all changes - Commit with message - Push to remote\nExtract this into:\ndef git_sync(message, verbose=False):\n    \"\"\"Add, commit, and push changes\"\"\"\n    run_cmd([\"git\", \"add\", \"-A\"], verbose=verbose)\n    run_cmd([\"git\", \"commit\", \"-m\", message], verbose=verbose)\n    run_cmd([\"git\", \"push\"], verbose=verbose)\nThen both functions can call git_sync(message, args.verbose) instead of repeating these three lines.",
+    "crumbs": [
+      "sync"
+    ]
+  },
+  {
+    "objectID": "sync.html#synchronization-workflow",
+    "href": "sync.html#synchronization-workflow",
+    "title": "sync",
+    "section": "Synchronization Workflow",
+    "text": "Synchronization Workflow\nThe main sync orchestrator: pull from remote, prepare the project, and push back. Each step validates before proceeding.\n\nsource\n\nsync\n\n sync (args)\n\nSync project: pull, prepare (export/test/clean), commit, and push\n\n\nThe Sync Gates\nGate 1: Merge conflict detection\nWhen git pull fails, we inspect git status --porcelain for conflict markers. UU indicates both sides modified the same file; AA means both sides added the same file. These require manual resolution—we abort and tell the user to fix conflicts before retrying.\nOther pull failures (network issues, auth problems) also abort but with a generic message since we can’t diagnose them automatically.\nGate 2: nbdev_prepare validation\nThe prepare step runs three operations: nbdev_export (notebooks → Python modules), nbdev_test (run tests), and nbdev_clean (strip notebook metadata). If any fail, we capture and display the full output so the user can see exactly which test failed or which export had issues.\nWe use capture_output=True here specifically to show output only on failure. Success is silent (unless --verbose); failure is loud.\nGate 3: Nothing to commit\nAfter prepare, git status --porcelain might show no changes—either nothing was modified, or prepare didn’t generate any new files. We detect this and skip the commit step rather than letting git fail with “nothing to commit”.\nThe commit sequence\nWe use git add -A to stage all changes: modified files, new files, and deletions. This is essential because nbdev_export might create new module files, and nbdev_clean might modify notebook metadata. The -am shortcut only stages modifications, missing new files entirely.\nTODO: When we extract git_sync(), this three-line sequence becomes one function call. Both sync() and ship() need this pattern, so factoring it out eliminates duplication.",
+    "crumbs": [
+      "sync"
+    ]
+  },
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "pj",
+    "section": "",
+    "text": "pj, the project shell, has four commands:\npj init creates the entire nbdev project infrastructure and pushes to GitHub,\npj sync runs nbdev_prepare then commits and pushes,\npj ship bumps up GitHub version and releases to PyPI.org,\npj kill stops background processes.\nThat’s it.",
+    "crumbs": [
+      "`pj`"
+    ]
+  },
+  {
+    "objectID": "index.html#install",
+    "href": "index.html#install",
+    "title": "pj",
+    "section": "Install",
+    "text": "Install\nInstall from PyPI, ideally with uv:\n$ uv tool install pj-sh\nor latest from the GitHub repository:\n$ uv tool install git+https://github.com/kitled/pj.git",
+    "crumbs": [
+      "`pj`"
+    ]
+  },
+  {
+    "objectID": "index.html#usage",
+    "href": "index.html#usage",
+    "title": "pj",
+    "section": "Usage",
+    "text": "Usage\npj init my-project  # start\npj sync             # work\npj kill             # end\nCreate complete nbdev project with pj init: GitHub repository, virtual environment, registered Jupyter kernel, direnv activation, dark theme toggle, initial commit pushed.\nSubsequent pj sync runs the full export-test-clean-add-commit-push workflow in one invocation.\nFind all options with --help after any command.\npj --help\npj init --help\n\ninit\n\nCreate new project\n\nStart with pj init proj_name to create a GitHub repo, setup nbdev fully, and push ready to code.\npj init my-project -v \\\n --desc \"ML utilities\" \\\n --public \\\n --python 3.12 \\\n --license apache2\nEverything is logged to init.log by default; use -v flag to see stdin/out.\n\n\nsync\n\nAutomated nbdev_prepare, git commit and push.\n\nUse pj sync to update remote;\nflag -m \"commit message\" (default: “save”).\npj sync -m \"Add new feature\"\n\n\nkill\n\nStop all servers\n\npj kill will terminate all running Jupyter, nbdev, Quarto processes on the host.",
+    "crumbs": [
+      "`pj`"
+    ]
+  },
+  {
+    "objectID": "index.html#why-pj",
+    "href": "index.html#why-pj",
+    "title": "pj",
+    "section": "Why pj?",
+    "text": "Why pj?\n\nPurpose\nCreate a fully-configured GitHub + nbdev project with one command.\nNo manual setup, no forgotten steps. From zero to ready-to-code.\n\nChecks - Validate prerequisites\nSetup - Create repo, nbdev structure, venv, kernel, direnv\nSync - Prepare nbdev, commit, push\n\n\n\nFeatures\n\nClean output: One line per operation\nVerbose mode: Show commands and boxed output with -v\nFail fast: Stop on first error\nSensible defaults: Private repos, log to init.log, push immediately",
+    "crumbs": [
+      "`pj`"
+    ]
+  },
+  {
+    "objectID": "index.html#devs",
+    "href": "index.html#devs",
+    "title": "pj",
+    "section": "Devs",
+    "text": "Devs\nIf you are new to using nbdev here are some useful pointers to get you started.\n\nInstall pj in Development mode\n# make sure pj package is installed in development mode\nuv pip install -e .\n\n# make changes under nbs/ directory\n# ...\n\n# compile to have changes apply to pj\nnbdev_prepare",
+    "crumbs": [
+      "`pj`"
+    ]
+  },
+  {
+    "objectID": "index.html#documentation",
+    "href": "index.html#documentation",
+    "title": "pj",
+    "section": "Documentation",
+    "text": "Documentation\nDocumentation can be found hosted on this GitHub repository’s pages.\nAdditionally you can find package manager specific guidelines on pypi.\nSee also: - uv - nbdev -",
+    "crumbs": [
+      "`pj`"
+    ]
+  },
+  {
+    "objectID": "setup.html",
+    "href": "setup.html",
+    "title": "setup",
+    "section": "",
+    "text": "Setup transforms an empty directory into a fully-configured nbdev project: GitHub repository created, virtual environment configured, Jupyter kernel registered, direnv wired up, documentation themed, and first commit pushed. The entire ceremony compressed into atomic execution.\nThe workflow follows a strict sequence—each step depends on the previous one’s success. We create the GitHub repo first (establishing the remote), scaffold nbdev structure locally, then configure the development environment to work with both.",
+    "crumbs": [
+      "setup"
+    ]
+  },
+  {
+    "objectID": "setup.html#future-architecture",
+    "href": "setup.html#future-architecture",
+    "title": "setup",
+    "section": "Future Architecture",
+    "text": "Future Architecture\nTODO: Refactor init_nbdev into composable functions\nThe current implementation is monolithic. Future structure should be: - create_github_repo() - Step 1 - scaffold_nbdev_structure() - Steps 2-2b - setup_python_environment() - Steps 3-6 - configure_project_automation() - Step 7-8 - initial_sync() - Steps 9-10 - launch_dev_servers() - Post-init optional servers\nTODO: Extract server launching to separate command\nLaunching Jupyter and nbdev_preview isn’t part of initialization—it’s a development convenience. Should be pj dev or pj launch, callable anytime during the project lifecycle. This also fixes the venv issue (use project’s jupyter, not global).\nSee placeholders below for future implementation.\n\nsource\n\nlaunch_dev_servers\n\n launch_dev_servers (project_path, args)\n\n*Launch Jupyter Lab and nbdev_preview in project venv\nTODO: Implement as separate pj dev command - Use project_path/.venv/bin/jupyter (not global) - Manage port allocation - Handle –no-preview, –no-lab, –code flags - Track PIDs for pj kill*",
+    "crumbs": [
+      "setup"
+    ]
+  },
+  {
+    "objectID": "setup.html#project-initialization",
+    "href": "setup.html#project-initialization",
+    "title": "setup",
+    "section": "Project Initialization",
+    "text": "Project Initialization\nThe main initialization orchestrator. Currently monolithic; future refactoring will decompose into the functions scaffolded above.\n\nsource\n\ninit_nbdev\n\n init_nbdev (args)\n\nInitialize a new nbdev project with full configuration.\n\n\nThe Initialization Sequence\nSteps 1-2: Remote and local scaffolding\nWe create the GitHub repository first, then run nbdev_new inside the cloned directory. This order matters: gh repo create --clone gives us a git-initialized directory with remote tracking configured. Running nbdev_new afterward populates that structure without fighting over git initialization.\nStep 2b: Theme injection\nThe dark theme must be applied after nbdev_new creates the nbs/ directory structure but before the first nbdev_prepare run. Quarto reads these theme files when rendering documentation.\nSteps 3-6: Python environment\nThe venv must exist before we can install packages into it. We explicitly specify --python .venv/bin/python to avoid the “active venv poisoning” problem—if the user has another venv active, uv pip install would target that instead of our project’s .venv.\nJupyter kernel registration requires ipykernel to be installed in the venv first. The kernel name matches the project name, making it obvious which kernel belongs to which project.\nSteps 7-8: Automation wiring\ndirenv auto-activates the venv when entering the project directory. The .envrc file is simple: just source .venv/bin/activate. Running direnv allow whitelists this specific .envrc file (direnv’s security model).\nThe .gitignore update is defensive: nbdev_new might not add .venv/, and we definitely don’t want to commit the init log or virtualenv to git.\nSteps 9-10: Initial sync\nnbdev_prepare exports notebooks to modules, runs tests, cleans metadata, and builds docs. Running it before the first commit ensures the initial state is clean. The check=False allows it to fail without aborting—some test failures are acceptable at this stage (e.g., empty notebooks).\nWe use git add -A not git commit -am because -am only stages modified files, missing the new files that nbdev_prepare created (exported modules, generated docs).\nPost-init server launching\nCurrently inline; should be extracted to launch_dev_servers() and eventually become pj dev command. Note the bug: uses global jupyter-lab instead of .venv/bin/jupyter lab. This will be fixed in the refactored version.\nThe shell exec trick\nos.execvp() replaces the current process with a new shell, landing the user in the project directory. This avoids nested shells (running pj init multiple times doesn’t stack shells). The trade-off: the user must exit to return to their original directory.",
+    "crumbs": [
+      "setup"
+    ]
+  },
+  {
+    "objectID": "core.html",
+    "href": "core.html",
+    "title": "core",
+    "section": "",
+    "text": "The core module provides the essential machinery that all other pj components depend on: command execution, prerequisite checking, port management, and theme configuration. These primitives handle the mechanical work of running subprocesses, validating system state, and configuring the development environment.",
+    "crumbs": [
+      "core"
+    ]
+  },
+  {
+    "objectID": "core.html#constants",
+    "href": "core.html#constants",
+    "title": "core",
+    "section": "Constants",
+    "text": "Constants\nA horizontal rule separator used throughout for visual sectioning in logs and output.",
+    "crumbs": [
+      "core"
+    ]
+  },
+  {
+    "objectID": "core.html#software-version",
+    "href": "core.html#software-version",
+    "title": "core",
+    "section": "Software Version",
+    "text": "Software Version\n\nsource\n\nget_pj_version\n\n get_pj_version ()\n\nGet pj version from settings.ini",
+    "crumbs": [
+      "core"
+    ]
+  },
+  {
+    "objectID": "core.html#process-management",
+    "href": "core.html#process-management",
+    "title": "core",
+    "section": "Process Management",
+    "text": "Process Management\nBackground processes—Jupyter servers, Quarto preview, nbdev watchers—accumulate during development. We need atomic cleanup to return to a known state.\n\nsource\n\nkill_processes\n\n kill_processes (args)\n\nKill all running pj-related processes\nThe pkill -f pattern matching catches processes by command line, not just process name. This matters for Quarto, which spawns as a Deno subprocess—killing “quarto” misses the actual server; killing “quarto.js preview” hits it.",
+    "crumbs": [
+      "core"
+    ]
+  },
+  {
+    "objectID": "core.html#port-allocation",
+    "href": "core.html#port-allocation",
+    "title": "core",
+    "section": "Port Allocation",
+    "text": "Port Allocation\nMultiple Jupyter instances need distinct ports. Rather than hardcode or prompt, we scan upward from a sensible default until we find an available port.\n\nsource\n\nfind_free_port\n\n find_free_port (start=64000)\n\nFind first available port starting from given port\nStarting at 64000 avoids privileged ports (&lt;1024) and common application ports (8000-9000). The 100-port window should never exhaust unless something is catastrophically wrong.",
+    "crumbs": [
+      "core"
+    ]
+  },
+  {
+    "objectID": "core.html#theme-configuration",
+    "href": "core.html#theme-configuration",
+    "title": "core",
+    "section": "Theme Configuration",
+    "text": "Theme Configuration\nThe default nbdev documentation is light-mode only. We inject a dark theme with toggle, custom syntax highlighting, and adjusted cell output styling.\n\nsource\n\nsetup_dark_theme\n\n setup_dark_theme (project_path, log_file=None, verbose=False)\n\nSet up dark mode theme for nbdev docs\nQuarto’s theming system expects a SCSS file for dark mode overrides. The key insight: cell outputs default to system colors, which are invisible on dark backgrounds. We force explicit colors for all output contexts.",
+    "crumbs": [
+      "core"
+    ]
+  },
+  {
+    "objectID": "core.html#command-validation",
+    "href": "core.html#command-validation",
+    "title": "core",
+    "section": "Command Validation",
+    "text": "Command Validation\nBefore running a complex workflow, verify that all required tools exist. Failing fast with installation hints beats cryptic subprocess errors halfway through.\n\nsource\n\ncheck_cmd\n\n check_cmd (cmd, install_hint)\n\nCheck if a command exists in PATH\nshutil.which() searches $PATH reliably across platforms. Returns the full path if found, None otherwise.",
+    "crumbs": [
+      "core"
+    ]
+  },
+  {
+    "objectID": "core.html#command-execution",
+    "href": "core.html#command-execution",
+    "title": "core",
+    "section": "Command Execution",
+    "text": "Command Execution\nAll subprocess calls funnel through run_cmd(), which provides consistent logging, error handling, and optional verbose output with formatted boundaries.\n\nsource\n\nrun_cmd\n\n run_cmd (cmd, cwd=None, check=True, capture_output=False, log_file=None,\n          verbose=False)\n\nRun a shell command with optional logging and pretty output\nThree modes: capture (return stdout/stderr for parsing), verbose (stream with box borders), silent (log to file only). The verbose mode’s box drawing makes it clear where command output begins and ends—essential when debugging multi-step processes.\nThe mock Result class in verbose mode maintains API compatibility: callers always get an object with .returncode, .stdout, .stderr attributes.",
+    "crumbs": [
+      "core"
+    ]
+  },
+  {
+    "objectID": "core.html#git-configuration",
+    "href": "core.html#git-configuration",
+    "title": "core",
+    "section": "Git Configuration",
+    "text": "Git Configuration\nExtract user information from git config for populating project metadata without prompting.\n\nsource\n\nget_git_config\n\n get_git_config (key)\n\nGet git config value\nReturns None on any failure—missing git, key not set, etc. Callers provide sensible defaults when None is returned.",
+    "crumbs": [
+      "core"
+    ]
+  }
+]
